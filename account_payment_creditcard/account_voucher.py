@@ -124,7 +124,7 @@ class account_voucher(osv.osv):
         if context is None:
             context = {}
         context.update({'cc_no':'no_mask'})
-        if not isinstance(ids,list):
+        if not isinstance(ids, list):
             ids = [ids]
         for record in self.browse(cr, uid, ids, context=context):
             if vals.get('cc_number', False):
@@ -222,7 +222,7 @@ class account_voucher(osv.osv):
         'cc_zip':fields.char('Postal/Zip', size=32,),
         'cc_country':fields.char('Country', size=32,),
         'cc_order_date':fields.date('Order Date',),
-        'cc_order_amt':fields.float('Order Amt',required=True),
+        'cc_order_amt':fields.float('Order Amt', required=True),
         'cc_number':fields.char('Credit Card Number', size=256),
         'cc_v':fields.char('Card Code Verification', size=3),
         'cc_e_d_month':fields.char('Expiration Date MM', size=32),
@@ -278,7 +278,7 @@ class account_voucher(osv.osv):
         cc_allow_refunds = jorurnal_cc_allow = False
         cardholder_details = self._get_cardholder_details(cr, uid, ids, partner_id, context=context)
         if journal_id and cardholder_details:
-            journal_read = self.pool.get('account.journal').read(cr, uid, journal_id, ['cc_allow_processing','cc_allow_refunds'])
+            journal_read = self.pool.get('account.journal').read(cr, uid, journal_id, ['cc_allow_processing', 'cc_allow_refunds'])
             jorurnal_cc_allow = journal_read['cc_allow_processing']
             cc_allow_refunds = journal_read['cc_allow_refunds']
             res['value']['cc_name'] = cardholder_details['name']
@@ -349,12 +349,12 @@ class account_voucher(osv.osv):
         journal_pool = self.pool.get('account.journal')
         line_pool = self.pool.get('account.voucher.line')
 
-        #set default values
+        # set default values
         default = {
-            'value': {'line_dr_ids': [] ,'line_cr_ids': [] ,'pre_line': False,},
+            'value': {'line_dr_ids': [] , 'line_cr_ids': [] , 'pre_line': False, },
         }
 
-        #drop existing lines
+        # drop existing lines
         line_ids = ids and line_pool.search(cr, uid, [('voucher_id', '=', ids[0])]) or False
         if line_ids:
             line_pool.unlink(cr, uid, line_ids)
@@ -377,14 +377,14 @@ class account_voucher(osv.osv):
             account_type = 'receivable'
 
         if not context.get('move_line_ids', False):
-            ids = move_line_pool.search(cr, uid, [('state','=','valid'), ('account_id.type', '=', account_type), ('reconcile_id', '=', False), ('partner_id', '=', partner_id)], context=context)
+            ids = move_line_pool.search(cr, uid, [('state', '=', 'valid'), ('account_id.type', '=', account_type), ('reconcile_id', '=', False), ('partner_id', '=', partner_id)], context=context)
         else:
             ids = context['move_line_ids']
         invoice_id = context.get('invoice_id', False)
         company_currency = journal.company_id.currency_id.id
         move_line_found = False
 
-        #order the lines by most old first
+        # order the lines by most old first
         ids.reverse()
         account_move_lines = move_line_pool.browse(cr, uid, ids, context=context)
 
@@ -393,25 +393,25 @@ class account_voucher(osv.osv):
         if context.get('sale_id'):
             INV_IDS = [x.id for x in self.pool.get('sale.order').browse(cr, uid, context['sale_id'], context=context).invoice_ids]
         
-        #compute the total debit/credit and look for a matching open amount or invoice
+        # compute the total debit/credit and look for a matching open amount or invoice
         for line in account_move_lines:
             if _remove_noise_in_o2m():
                 continue
 
             if INV_IDS:
                 if line.invoice.id in INV_IDS:
-                    #if the invoice linked to the voucher line is equal to the invoice_id in context
-                    #then we assign the amount on that line, whatever the other voucher lines
+                    # if the invoice linked to the voucher line is equal to the invoice_id in context
+                    # then we assign the amount on that line, whatever the other voucher lines
                     move_line_found = line.id
                     break
             elif currency_id == company_currency:
-                #otherwise treatments is the same but with other field names
+                # otherwise treatments is the same but with other field names
                 if line.amount_residual == price:
-                    #if the amount residual is equal the amount voucher, we assign it to that voucher
-                    #line, whatever the other voucher lines
+                    # if the amount residual is equal the amount voucher, we assign it to that voucher
+                    # line, whatever the other voucher lines
                     move_line_found = line.id
                     break
-                #otherwise we will split the voucher amount on each line (by most old first)
+                # otherwise we will split the voucher amount on each line (by most old first)
                 total_credit += line.credit or 0.0
                 total_debit += line.debit or 0.0
             elif currency_id == line.currency_id.id:
@@ -422,7 +422,7 @@ class account_voucher(osv.osv):
                 total_debit += line.debit and line.amount_currency or 0.0
         
         
-        #voucher line creation
+        # voucher line creation
         for line in account_move_lines:
             if _remove_noise_in_o2m():
                 continue
@@ -430,7 +430,7 @@ class account_voucher(osv.osv):
                 amount_original = abs(line.amount_currency)
                 amount_unreconciled = abs(line.amount_residual_currency)
             else:
-                #always use the amount booked in the company currency as the basis of the conversion into the voucher currency
+                # always use the amount booked in the company currency as the basis of the conversion into the voucher currency
                 amount_original = currency_pool.compute(cr, uid, company_currency, currency_id, line.credit or line.debit or 0.0, context=context_multi_currency)
                 amount_unreconciled = currency_pool.compute(cr, uid, company_currency, currency_id, abs(line.amount_residual), context=context_multi_currency)
             line_currency_id = line.currency_id and line.currency_id.id or company_currency
@@ -446,8 +446,8 @@ class account_voucher(osv.osv):
                 'amount_unreconciled': amount_unreconciled,
                 'currency_id': line_currency_id,
             }
-            #in case a corresponding move_line hasn't been found, we now try to assign the voucher amount
-            #on existing invoices: we split voucher amount by most old first, but only for lines in the same currency
+            # in case a corresponding move_line hasn't been found, we now try to assign the voucher amount
+            # on existing invoices: we split voucher amount by most old first, but only for lines in the same currency
             inv_ids = []
             REC = False
             if line.invoice.id and context.get('sale_id'):

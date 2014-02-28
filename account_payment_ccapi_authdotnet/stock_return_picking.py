@@ -28,7 +28,7 @@ class stock_return_picking(osv.TransientModel):
     _inherit = 'stock.return.picking'
     _columns = { 
         'cc_ship_refund' : fields.boolean(string='Refund Shipcharge', required=True),
-        'invoice_state': fields.selection([('2binvoiced', 'To be refunded/invoiced'), ('none', 'No invoicing'),('cc_refund','Credit Card Refund')], 'Invoicing',required=True),
+        'invoice_state': fields.selection([('2binvoiced', 'To be refunded/invoiced'), ('none', 'No invoicing'), ('cc_refund', 'Credit Card Refund')], 'Invoicing', required=True),
     }
     
     def default_get(self, cr, uid, fields, context=None):
@@ -79,7 +79,7 @@ class stock_return_picking(osv.TransientModel):
         res = super(stock_return_picking, self).create_returns(cr, uid, ids, context)
         
         move_lines = data['product_return_moves']
-        #@ Moving the refund process to On Delivery process of related incoming shipment
+        # @ Moving the refund process to On Delivery process of related incoming shipment
         if data['invoice_state'] == 'cc_refund':
             amount = 0.00
             for move in move_lines:
@@ -136,11 +136,11 @@ class stock_picking(osv.osv):
                 amount = 0.00
                 vch_lines = []
                 Lines = pick.move_lines
-                if pick.backorder_id.id and pick.state=='assigned':
+                if pick.backorder_id.id and pick.state == 'assigned':
                     Lines = pick.backorder_id.move_lines
                 for move in Lines:
-                    partial_data = partial_datas.get('move%s'%(move.id), {})
-                    new_qty = partial_data.get('product_qty',0.0)
+                    partial_data = partial_datas.get('move%s' % (move.id), {})
+                    new_qty = partial_data.get('product_qty', 0.0)
                     line = {}
                     if IN:
                         line['product_id'] = move.product_id.id
@@ -162,7 +162,7 @@ class stock_picking(osv.osv):
                     if sale and sale.payment_method == 'cc_pre_auth' and not sale.invoiced:
                         rel_voucher = sale.rel_account_voucher_id or False
                         if rel_voucher and rel_voucher.state != 'posted' and rel_voucher.cc_auth_code:
-                            vals_vouch = {'cc_order_amt': amount,'cc_p_authorize': False, 'cc_charge': True}
+                            vals_vouch = {'cc_order_amt': amount, 'cc_p_authorize': False, 'cc_charge': True}
                             if 'trans_type' in rel_voucher._columns.keys():
                                 vals_vouch.update({'trans_type': 'PriorAuthCapture'})
                             voucher_obj.write(cr, uid, [rel_voucher.id], vals_vouch, context=context)
