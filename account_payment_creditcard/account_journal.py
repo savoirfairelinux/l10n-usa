@@ -36,8 +36,8 @@ class res_partner(osv.osv):
     _inherit = "res.partner"
     
     def write(self, cr, uid, ids, vals, context=None):
-        if vals.get('bank_ids',[]) and len(vals['bank_ids'][0]) == 3 and vals['bank_ids'][0][2] :
-            if vals['bank_ids'][0][2].get('cc_number',False):
+        if vals.get('bank_ids', []) and len(vals['bank_ids'][0]) == 3 and vals['bank_ids'][0][2] :
+            if vals['bank_ids'][0][2].get('cc_number', False):
                 if ('XXXXXXXXX' in vals['bank_ids'][0][2]['cc_number']):
                     if vals.get('cc_number'):
                         del vals['cc_number']
@@ -52,7 +52,7 @@ class res_partner_bank(osv.osv):
     _inherit = "res.partner.bank"
 
     _columns = {
-        'cc_number':fields.char('Credit Card Number', size=256),#Given size 256 because the credit card is stored as encrypted format.
+        'cc_number':fields.char('Credit Card Number', size=256),  # Given size 256 because the credit card is stored as encrypted format.
         'cc_e_d_month':fields.char('Expiration Date MM', size=32),
         'cc_e_d_year':fields.char('Expiration Date YY', size=32),
         'cc_v':fields.char('Card Code Verification', size=3),
@@ -94,7 +94,7 @@ class res_partner_bank(osv.osv):
         if context is None:
             context = {}
         context.update({'cc_no':'no_mask'})
-        if not isinstance(ids,list):
+        if not isinstance(ids, list):
             ids = [ids]
         for record in self.browse(cr, uid, ids, context=context):
             if vals.get('cc_number', False):

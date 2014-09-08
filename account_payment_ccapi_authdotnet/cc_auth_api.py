@@ -128,11 +128,11 @@ class auth_net_cc_api(osv.osv):
 #        vals['type'] = 'sale'
 #        vals['currency_id'] = journal_obj.company_id.currency_id.id
 #        vals['line_cr_ids'] = [(0,0,cr_ids) for cr_ids in cr_ids_list]
-##        vals['narration'] = voucher_obj.narration
+# #        vals['narration'] = voucher_obj.narration
 #        vals['pay_now'] = 'pay_now'
 #        vals['account_id'] = journal_obj.default_debit_account_id.id  
-##        vals['reference'] = voucher_obj.reference
-##        vals['tax_id'] = voucher_obj.tax_id.id
+# #        vals['reference'] = voucher_obj.reference
+# #        vals['tax_id'] = voucher_obj.tax_id.id
 #        vals['amount'] = sale_obj.amount_total
 #        vals['company_id'] = journal_obj.company_id.id
 #        voucher_id = self.pool.get('account.voucher').create(cr,uid,vals,context)
@@ -153,9 +153,9 @@ class auth_net_cc_api(osv.osv):
             acc_voucher_obj = voucher_obj.browse(cr, uid, ids, context={'cc_no':'no_mask'})
         user = self.pool.get('res.users').browse(cr, uid, uid)
         
-        creditcard = acc_voucher_obj.cc_number#  CREDIT CARD NUMBER
-        expiration = acc_voucher_obj.cc_e_d_month + acc_voucher_obj.cc_e_d_year ################ EXPIRATION DATE MM + YY
-        total = acc_voucher_obj.cc_order_amt ############## ORDER AMOUNT
+        creditcard = acc_voucher_obj.cc_number  #  CREDIT CARD NUMBER
+        expiration = acc_voucher_obj.cc_e_d_month + acc_voucher_obj.cc_e_d_year  ################ EXPIRATION DATE MM + YY
+        total = acc_voucher_obj.cc_order_amt  ############## ORDER AMOUNT
         
         if acc_voucher_obj.cc_save_card_details:
             if not acc_voucher_obj.cc_bank:
@@ -164,10 +164,10 @@ class auth_net_cc_api(osv.osv):
                 if not partner_bank_obj.search(cr, uid, [('cc_number', '=', creditcard), ('partner_id', '=', acc_voucher_obj.partner_id.id)]):
                     state_id = country_id = False
                     if acc_voucher_obj.cc_state:
-                        state_ids = self.pool.get('res.country.state').search(cr, uid, [('name','=',acc_voucher_obj.cc_state)])
+                        state_ids = self.pool.get('res.country.state').search(cr, uid, [('name', '=', acc_voucher_obj.cc_state)])
                         state_id = state_ids and state_ids[0] or False
                     if acc_voucher_obj.cc_country:
-                        country_ids = self.pool.get('res.country').search(cr, uid, [('name','=',acc_voucher_obj.cc_country)])
+                        country_ids = self.pool.get('res.country').search(cr, uid, [('name', '=', acc_voucher_obj.cc_country)])
                         country_id = country_ids and country_ids[0] or False
                     part = acc_voucher_obj.partner_id.id
                     if acc_voucher_obj.partner_id.parent_id:
@@ -181,7 +181,7 @@ class auth_net_cc_api(osv.osv):
                                                         'bank':acc_voucher_obj.cc_bank.id,
                                                         'cc_v':acc_voucher_obj.cc_v,
                                                         'owner_name':acc_voucher_obj.cc_name,
-                                                        'street':str(acc_voucher_obj.cc_b_addr_1) +'-'+ str(acc_voucher_obj.cc_b_addr_2),
+                                                        'street':str(acc_voucher_obj.cc_b_addr_1) + '-' + str(acc_voucher_obj.cc_b_addr_2),
                                                         'city': acc_voucher_obj.cc_city,
                                                         'zip': acc_voucher_obj.cc_zip,
                                                         'state_id': state_id,
@@ -219,13 +219,13 @@ class auth_net_cc_api(osv.osv):
 
         if str(login).strip() == '' or login == None:
             raise osv.except_osv(_('Error'), _("No login name provided"))
-            #raise AuthnetAIMError('No login name provided')
+            # raise AuthnetAIMError('No login name provided')
         if str(transkey).strip() == '' or transkey == None:
             raise osv.except_osv(_('Error'), _("No transaction key provided"))
-            #raise AuthnetAIMError('No transaction key provided')
+            # raise AuthnetAIMError('No transaction key provided')
         if testmode != True and testmode != False:
             raise osv.except_osv(_('Error'), _("Invalid value for testmode. Must be True or False. "))
-            #raise AuthnetAIMError('Invalid value for testmode. Must be True or False. "{0}" given.'.format(testmode))
+            # raise AuthnetAIMError('Invalid value for testmode. Must be True or False. "{0}" given.'.format(testmode))
 
         parameters = {}
         proxy = None
@@ -247,24 +247,24 @@ class auth_net_cc_api(osv.osv):
         parameters = voucher_obj.setParameter(parameters, 'x_login', login)
         parameters = voucher_obj.setParameter(parameters, 'x_tran_key', transkey)
         
-        if acc_voucher_obj.cc_charge and x_type !='CREDIT':
+        if acc_voucher_obj.cc_charge and x_type != 'CREDIT':
             parameters = voucher_obj.setParameter(parameters, 'x_auth_code', acc_voucher_obj.cc_auth_code)
 
-        #PreAuth is done, so sending x_trans_id for capture
-        if x_type in ['PRIOR_AUTH_CAPTURE','CREDIT']:
+        # PreAuth is done, so sending x_trans_id for capture
+        if x_type in ['PRIOR_AUTH_CAPTURE', 'CREDIT']:
             parameters = voucher_obj.setParameter(parameters, 'x_trans_id', acc_voucher_obj.cc_trans_id)
         
         ########## setTransaction
         if str(creditcard).strip() == '' or creditcard == None:
             raise osv.except_osv(_('Error'), _("No credit card number passed to setTransaction()"))
-            #raise AuthnetAIMError('No credit card number passed to setTransaction(): {0}').format(creditcard)
+            # raise AuthnetAIMError('No credit card number passed to setTransaction(): {0}').format(creditcard)
         if str(expiration).strip() == '' or expiration == None:
             raise osv.except_osv(_('Error'), _("No expiration number to setTransaction()"))
-            #raise AuthnetAIMError('No expiration number to setTransaction(): {0}').format(expiration)
+            # raise AuthnetAIMError('No expiration number to setTransaction(): {0}').format(expiration)
         if str(total).strip() == '' or total == None:
             raise osv.except_osv(_('Error'), _("No total amount passed to setTransaction()"))
 
-            #raise AuthnetAIMError('No total amount passed to setTransaction(): {0}').format(total)
+            # raise AuthnetAIMError('No total amount passed to setTransaction(): {0}').format(total)
 
         parameters = voucher_obj.setParameter(parameters, 'x_card_num', creditcard)
         parameters = voucher_obj.setParameter(parameters, 'x_exp_date', expiration)
@@ -331,13 +331,13 @@ class auth_net_cc_api(osv.osv):
              ret_dic['cc_trans_id'] = results[6]
              ret_dic['cc_transaction'] = True
              voucher_obj.write(cr, uid, ids, ret_dic)
-             voucher_obj._historise(cr, uid, acc_voucher_obj.id, 'Capture',trans_id=results[6], status=status, amount=acc_voucher_obj.cc_order_amt)
+             voucher_obj._historise(cr, uid, acc_voucher_obj.id, 'Capture', trans_id=results[6], status=status, amount=acc_voucher_obj.cc_order_amt)
              cr.commit()
              if results[0] == '1':
                  '''
                      Validating sales receipt
                  '''
-                 #self.validate_sales_reciept(cr, uid, ids, context=context)
+                 # self.validate_sales_reciept(cr, uid, ids, context=context)
                  '''
                      Posting payment voucher
                  '''
@@ -348,11 +348,11 @@ class auth_net_cc_api(osv.osv):
         elif x_type == 'CREDIT':
             status = 'Refund: ' + str(results[3])
             ret_dic['cc_status'] = status
-            voucher_obj._historise(cr, uid, acc_voucher_obj.id, 'Refund',trans_id=results[6], status=status, amount=acc_voucher_obj.cc_refund_amt)
+            voucher_obj._historise(cr, uid, acc_voucher_obj.id, 'Refund', trans_id=results[6], status=status, amount=acc_voucher_obj.cc_refund_amt)
             if results[0] == '1':
                 ret_dic['cc_transaction'] = False
-                #Domain : [('type','=','out_refund')]
-                #Context: {'type':'out_refund', 'journal_type': 'sale_refund'}
+                # Domain : [('type','=','out_refund')]
+                # Context: {'type':'out_refund', 'journal_type': 'sale_refund'}
                 refund_journal_id = False
                 j_ids = self.pool.get('account.journal').search(cr, uid, [('type', '=', 'sale_refund')], context=context)
                 if j_ids:
@@ -372,7 +372,7 @@ class auth_net_cc_api(osv.osv):
 #                        inv_vals['sale_account_id'] = ship_method.account_id and ship_method.account_id.id,
                     inv_vals.update(invoice_obj.onchange_partner_id(cr, uid, [], 'out_refund', acc_voucher_obj.partner_id.id, '', '', '', '')['value'])
                     inv_lines = []
-                    refund_lines = context.get('cc_refund',[])
+                    refund_lines = context.get('cc_refund', [])
                     for line in refund_lines:
                         
                         inv_line_vals = {
@@ -388,104 +388,6 @@ class auth_net_cc_api(osv.osv):
                     
                     invoice_id = invoice_obj.create(cr, uid, inv_vals, context=context)
                     wf_service.trg_validate(uid, 'account.invoice', invoice_id, 'invoice_open', cr)
-                    
-#                ret = True
-#                voucher_obj = self.pool.get('account.voucher')
-#                
-#
-#                refund_journal_id = False
-#                if user.company_id.cc_refund_journal_id:                    
-#                    refund_journal_id = user.company_id.cc_refund_journal_id.id
-#                else
-#                    j_ids = self.pool.get('account.journal').search(cr, uid, [('type','=','sale_refund')], context=context)
-#                    if j_ids:
-#                        refund_journal_id = j_ids[0]
-#                
-#                account_id=False
-#                if refund_journal_id:
-#                    default_debit_account_id = self.pool.get('account.journal').browse(cr, uid, refund_journal_id,context=context).default_debit_account_id.id
-#                
-#                
-#                vals1 = {
-#                        
-#                            'name' :  'Refund : ' + (acc_voucher_obj.rel_sale_order_id and str(acc_voucher_obj.rel_sale_order_id.name) or ''),
-#                            'account_id' :  default_debit_account_id,
-#                            'partner_id' : acc_voucher_obj.partner_id.id,
-#                            'amount'    : acc_voucher_obj.cc_order_amt,
-#                            'currency_id' :  user.company_id.currency_id.id,
-#                            'origin':acc_voucher_obj.rel_sale_order_id and acc_voucher_obj.rel_sale_order_id.name or ''
-#                        }
-#
-#                
-#                vals  = voucher_obj.onchange_partner_id(cr, uid, [], acc_voucher_obj.partner_id.id, refund_journal_id , acc_voucher_obj.cc_order_amt , user.company_id.currency_id.id, 'sale', time())
-#                
-#                vals.update(vals1)
-#                
-#                vals['journal_id'] = refund_journal_id
-#                vals['type'] = 'sale'
-#                
-#               
-#                
-#                
-#                voucher_id = voucher_obj.create(cr, uid, vals, context=context)
-#                
-#                
-#                if acc_voucher_obj.cc_order_amt == acc_voucher_obj.rel_sale_order_id.amount_total and acc_voucher_obj.rel_sale_order_id.shipcharge:
-#                    self.pool.get('sale.order').write(cr, uid, [acc_voucher_obj.rel_sale_order_id.id],{'cc_ship_refund':True},context=context)
-#                    
-#                refund_voucher=False
-#                if 'cc_refund' not in context:
-#                    refund_voucher=True
-#                    sales_receipt_ids = voucher_obj.search(cr,uid,[('rel_sale_order_id','=',acc_voucher_obj.rel_sale_order_id.id),('state','=','posted'),('type','=','sale')], order="id desc",context=context)
-#
-#                    for receipt in voucher_obj.browse(cr, uid, sales_receipt_ids, context):
-#                        
-#                        for line in receipt.line_ids:
-#
-#                            if line.amount:
-#                                vals = {
-#                                            'voucher_id': voucher_id,
-#                                            'name' : line.name,
-#                                            'account_id' : line.account_id.id,
-#                                            'partner_id' : line.partner_id.id,
-#                                            'amount' : line.amount,
-#                                            'type': line.type,
-#                                            
-#                                    }
-#                                line_id = self.pool.get('account.voucher.line').create(cr, uid, vals, context)
-#                        break
-#                else:
-#                    for line in context['cc_refund']:
-#                        product=self.pool.get('product.product').browse(cr, uid, line['product_id'],context)
-#                        
-#                        vals = {
-#                                'voucher_id': voucher_id,
-#                                'name' : product.name,
-#                                'account_id' : product.product_tmpl_id.property_account_income.id,
-#                                'partner_id' : acc_voucher_obj.partner_id.id,
-#                                'amount'    :  product.list_price * line['qty'],
-#                                'type' : 'cr',                                
-#                                }
-#                        line_id = self.pool.get('account.voucher.line').create(cr, uid, vals, context)
-#                    if context.get('cc_ship_refund'):
-#                        vals = {
-#                                'voucher_id': voucher_id,
-#                                'name' : 'Shipping Charges of ' + acc_voucher_obj.rel_sale_order_id.name,
-#                                'account_id' : acc_voucher_obj.rel_sale_order_id.ship_method_id and acc_voucher_obj.rel_sale_order_id.ship_method_id.account_id.id or False,
-#                                'partner_id' : acc_voucher_obj.partner_id.id,
-#                                'amount'    : context['cc_ship_refund'],
-#                                'type' : 'cr', 
-#                                }
-#                        line_id = self.pool.get('account.voucher.line').create(cr, uid, vals, context)
-#                        self.pool.get('sale.order').write(cr, uid, [acc_voucher_obj.rel_sale_order_id.id],{'cc_ship_refund':True},context=context)
-#                
-#                #         if x_type == 'CAPTURE_ONLY':
-#             status = "Capture: " + str(results[3])
-#             ret_dic['cc_status'] = status
-#             voucher_obj.write(cr, uid, ids, ret_dic)
-#                if not refund_voucher:      
-#                    wf_service = netsvc.LocalService('workflow')
-#                    wf_service.trg_validate(uid, 'account.voucher', voucher_id, 'proforma_voucher', cr)
                 
             else:
                 ret_dic['cc_transaction'] = True
@@ -505,7 +407,7 @@ class account_voucher(osv.osv):
     '''
     
     def check_transaction(self, cr, uid, ids, context=None):
-        transaction_record = self.browse( cr, uid, ids,context)
+        transaction_record = self.browse(cr, uid, ids, context)
         for record in transaction_record:
              if record.cc_p_authorize and record.cc_auth_code:
                  raise osv.except_osv(_('Error'), _("Already Authorized!"))
@@ -550,7 +452,7 @@ class sale_order(osv.osv):
             journal_obj = self.pool.get('account.journal').browse(cr, uid, journal_ids[0])
             if sale_obj and sale_obj.order_line:
                 for sale_line in sale_obj.order_line:
-                    cr_ids['account_id'] = self._get_prod_acc(sale_line.product_id and sale_line.product_id, journal_obj)#journal_obj.default_debit_account_id.id #Change this account to product's income account
+                    cr_ids['account_id'] = self._get_prod_acc(sale_line.product_id and sale_line.product_id, journal_obj)  # journal_obj.default_debit_account_id.id #Change this account to product's income account
                     cr_ids['amount'] = sale_line.price_subtotal
                     cr_ids['partner_id'] = sale_obj.partner_id.id
                     cr_ids['name'] = sale_line.name
@@ -565,7 +467,7 @@ class sale_order(osv.osv):
         else:
             vals['journal_id'] = False
         vals['partner_id'] = sale_obj.partner_id.id
-        #vals['date'] = sale_obj.date_order
+        # vals['date'] = sale_obj.date_order
         vals['rel_sale_order_id'] = ids[0]
         vals['name'] = 'Auto generated Sales Receipt'
         vals['type'] = 'sale'
@@ -588,7 +490,7 @@ class sale_order(osv.osv):
         ret = super(sale_order, self).action_wait(cr, uid, ids, context=context)
         for o in self.browse(cr, uid, ids, context=context):
             if (o.order_policy == 'credit_card'):
-                #self.create_sales_reciept(cr, uid, [o.id])
+                # self.create_sales_reciept(cr, uid, [o.id])
                 invoice_id = self.action_invoice_create(cr, uid, [o.id], context=context)
                 wf_service = netsvc.LocalService('workflow')
                 wf_service.trg_validate(uid, 'account.invoice', invoice_id, 'invoice_open', cr)
